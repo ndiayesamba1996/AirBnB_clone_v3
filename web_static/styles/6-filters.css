@@ -1,119 +1,92 @@
-@charset "UTF-8";
-/** Holberton Practice Styles
- * ------ Filters
- */
-
-.container .filters {
-	height: 70px;
-	background-color: #FFFFFF;
-	width: 100%;
-	border: 1px solid #DDDDDD;
-	border-radius: 4px;
-	display: flex;
-	flex-direction: row;
-	justify-content: center;
-	align-items: stretch;
-	z-index: 2;
-	position: relative;
+.filters {
+    color: white;
+    height: 70px;
+    width: 100%;
+    border: 1px solid #DDDDDD;
+    border-radius: 4px;
+    position: relative;
+    display: inline-block;
 }
 
-.container .filters .locations {
-	width: 25%;
-	border-right: 1px solid #DDDDDD;
+.locations {
+    width: 25%;
+    height: 100%;
+    float: left;
+    border-right: 1px solid #DDDDDD;
 }
 
-.container .filters .amenities {
-	width: 25%;
+.amenities {
+    widt: 25%;
+    height: 100%;
+    float: left;
 }
 
-.container .filters button {
-	font-size: 18px;
-	background-color: #FF5A5F;
-	height: 48px;
-	width: 20%;
-	border: none;
-	border-radius: 4px;
-	margin: auto 30px auto auto;
+h3 {
+    color: black;
+    font-weight: 600;
+    margin-left: 30px;
+    line-height: 8px;
 }
 
-.container .filters button:hover {
-	opacity: 0.9;
+h4 {
+    color: black;
+    font-weight: 400;
+    line-height: 2px;
+    margin-left: 30px;
 }
 
-/**
- * ------ HEADERS
- */
-
-.container .filters h2 {
-	font-size: 16px;
-	margin: 10px 0 5px 0;
+button {
+    font-size: 18px;
+    background-color: #FF5A5F;
+    border-color: #FF5A5F;
+    border-style: solid;
+    color: white;
+    height: 48px;
+    width: 20%;
+    border-radius: 4px;
+    position: relative;
+    text-align: center;
+    margin-top: 11px;
+    float: right;
+    right: 30px;
+    opacity: 1;
 }
 
-.container .filters h3 {
-	font-weight: 600;
-	margin: 12px 0 4px 40px;
+button:hover {
+    opacity: 0.9;
 }
 
-.container .filters h4 {
-	font-weight: 400;
-	font-size: 14px;
-	margin: 7px 0 3px 40px;
+ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    text-indent: 20px;
 }
 
-/**
- * ------ POPOVER
- */
-
-.container .filters .locations:hover .popover {
-	display: list-item;
+li {
+    padding-bottom: 10px;
+    text-indent: 40px;
 }
 
-.container .filters .amenities:hover .popover {
-	display: list-item;
+.locations:hover .popover {
+    display: table-cell;
 }
 
-.container .filters .popover {
-	display: none;
-	list-style-type: none;
-	background-color: #FAFAFA;
-	border: 1px solid #DDDDDD;
-	border-radius: 4px;
-	padding: 30px 40px 40px 30px;
-	margin: 15px -1px 0 -1px;
+.amenities:hover .popover {
+    display: table-cell;
 }
 
-.container .filters .popover ul {
-	list-style-type: none;
-	padding-left: 20px;
-}
-
-.container .filters .popover li {
-	margin: 5px 0 5px 0;
-}
-
-@media screen and (max-width: 600px) {
-
-	.container .filters {
-		flex-direction: column;
-		height: auto;
-		width: 90%;
-		margin: auto;
-	}
-
-	.container .filters .locations {
-		border-bottom: 1px solid #DDDDDD;
-	}
-
-	.container .filters .locations,
-	.container .filters .amenities {
-		width: 100%;
-		border-right: none;
-		border-bottom: 1px solid #DDDDDD;
-	}
-
-	.container .filters button {
-		width: 80%;
-		margin: 5px auto;
-	}
-
+.popover {
+    margin-top: 6px;
+    display: none;
+    position: absolute;
+    background: #FAFAFA;
+    width: 25%;
+    color: black;
+    border: 1px solid #DDDDDD;
+    border-radius: 4px;
+    float: left;
+    padding-bottom: 30px;
 }

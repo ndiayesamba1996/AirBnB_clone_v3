@@ -1,116 +1,114 @@
 #!/usr/bin/python3
 """
-BaseModel Class of Models Module
+This module contains the BaseModel class:
+All classes should inherit from this class
 """
-
-import os
-import json
-import models
-from uuid import uuid4, UUID
 from datetime import datetime
+import uuid
+import models
+from sqlalchemy import Column, Integer, String, Table, DateTime
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, Float, DateTime
+from os import getenv
+import uuid
 
-storage_type = os.environ.get('HBNB_TYPE_STORAGE')
-
-"""
-    Creates instance of Base if storage type is a database
-    If not database storage, uses class Base
-"""
-if storage_type == 'db':
+if getenv('HBNB_TYPE_STORAGE', 'fs') == 'db':
     Base = declarative_base()
 else:
-    class Base:
-        pass
+    Base = object
 
 
 class BaseModel:
-    """
-        attributes and functions for BaseModel class
-    """
-
-    if storage_type == 'db':
-        id = Column(String(60), nullable=False, primary_key=True)
-        created_at = Column(DateTime, nullable=False,
-                            default=datetime.utcnow())
-        updated_at = Column(DateTime, nullable=False,
-                            default=datetime.utcnow())
+    """The base class for all storage objects in this project"""
+    if getenv('HBNB_TYPE_STORAGE', 'fs') == 'db':
+        id = Column(String(60), primary_key=True, nullable=False)
+        created_at = Column(DateTime(timezone=True), default=datetime.now(),
+                            nullable=False)
+        updated_at = Column(DateTime(timezone=True), default=datetime.now(),
+                            nullable=False,
+                            onupdate=datetime.now)
 
     def __init__(self, *args, **kwargs):
-        """instantiation of new BaseModel Class"""
+        """
+        initialize class object
+
+        **Arguments**
+           none: a unique user id and timestamp will be created
+           args: a sequence, this should not be used, please pass a dictionary
+                 as **dictionary
+           kwargs: a dictionay, if the id and timestamp are missing they will
+                   be created
+        """
+
+        if args:  # this is not the right way to handle kwargs
+            kwargs = args[0]
         if kwargs:
-            self.__set_attributes(kwargs)
-        else:
-            self.id = str(uuid4())
+            flag_id = False
+            flag_created_at = False
+            for k in kwargs.keys():
+                if k == "created_at" or k == "updated_at":
+                    if k == "created_at":
+                        flag_created_at = True
+                    if not isinstance(kwargs[k], datetime):
+                        kwargs[k] = datetime(*self.__str_to_numbers(kwargs[k]))
+                elif k == "id":
+                    flag_id = True
+                setattr(self, k, kwargs[k])
+            if not flag_created_at:
+                self.created_at = datetime.now()
+            if not flag_id:
+                self.id = str(uuid.uuid4())
+        elif not args:
             self.created_at = datetime.now()
+            self.id = str(uuid.uuid4())
 
-    def __set_attributes(self, attr_dict):
+    def __str_to_numbers(self, s):
         """
-            private: converts kwargs values to python class attributes
-        """
-        if 'id' not in attr_dict:
-            attr_dict['id'] = str(uuid4())
-        if 'created_at' not in attr_dict:
-            attr_dict['created_at'] = datetime.now()
-        elif not isinstance(attr_dict['created_at'], datetime):
-            attr_dict['created_at'] = datetime.strptime(
-                attr_dict['created_at'], '%Y-%m-%d %H:%M:%S.%f')
-        if 'updated_at' in attr_dict:
-            if not isinstance(attr_dict['updated_at'], datetime):
-                attr_dict['updated_at'] = datetime.strptime(
-                    attr_dict['updated_at'], '%Y-%m-%d %H:%M:%S.%f')
-        if storage_type != 'db':
-            if attr_dict['__class__']:
-                attr_dict.pop('__class__')
-        for attr, val in attr_dict.items():
-            setattr(self, attr, val)
+        Prepares a string for datetime
 
-    def __is_serializable(self, obj_v):
+        **Arguments**
+           s: a string of numbers
         """
-            private: checks if object is serializable
-        """
-        try:
-            obj_to_str = json.dumps(obj_v)
-            return obj_to_str is not None and isinstance(obj_to_str, str)
-        except:
-            return False
-
-    def bm_update(self, name, value):
-        """
-            updates the basemodel and sets the correct attributes
-        """
-        setattr(self, name, value)
-        if storage_type != 'db':
-            self.save()
+        tmp = ''.join([o if o not in "T;:.,-_" else " " for o in s]).split()
+        res = [int(i) for i in tmp]
+        return res
 
     def save(self):
-        """updates attribute updated_at to current time"""
-        if storage_type != 'db':
-            self.updated_at = datetime.now()
+        """method to update self"""
+        self.__dict__["updated_at"] = datetime.now()
         models.storage.new(self)
         models.storage.save()
 
-    def to_json(self):
-        """returns json representation of self"""
-        bm_dict = {}
-        for key, value in (self.__dict__).items():
-            if key == '_sa_instance_state':
-                del key
-                continue
-            if (self.__is_serializable(value)):
-                bm_dict[key] = value
-            else:
-                bm_dict[key] = str(value)
-        bm_dict['__class__'] = type(self).__name__
-        return(bm_dict)
-
     def __str__(self):
-        """returns string type representation of object instance"""
-        class_name = type(self).__name__
-        return '[{}] ({}) {}'.format(class_name, self.id, self.__dict__)
+        """edit string representation"""
+        return "[{}] ({}) {}".format(type(self)
+                                     .__name__, self.id, self.__dict__)
 
-    def delete(self):
-        """
-            deletes current instance from storage
-        """
-        models.storage.delete(self)
+    def to_json(self, saving=False):
+        """convert to json"""
+        dupe = self.__dict__.copy()
+        dupe.pop('_sa_instance_state', None)
+
+        dupe["created_at"] = dupe["created_at"].isoformat()
+        # sqlAlchemy_storage_engine
+        if ("updated_at" in dupe):
+            dupe["updated_at"] = dupe["updated_at"].isoformat()
+        dupe["__class__"] = type(self).__name__
+        if not saving:
+            dupe.pop("password", None)
+        dupe.pop("amenities", None)
+        dupe.pop("amenities_id", None)
+        return dupe
+
+
+#    def __setattr__(self, name, value):
+#        """
+#        Forbids update of instance variables
+#        Arguments:
+#        name: name
+#        value: value
+#        """
+#        if name in ("id", "created_at", "updated_at"):
+#            if name in self.__dict__.keys()
+# and self.__dict__[name] is not None:
+#                return
+#        object.__setattr__(self, name, value):
